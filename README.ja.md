@@ -2,9 +2,6 @@
 
 **splunk-cli**は、SplunkのREST APIと対話するための、Go言語で書かれた強力かつ軽量なコマンドラインインターフェース（CLI）ツールです。ターミナルから直接、またはスクリプト経由で、SPL（Search Processing Language）クエリの実行、検索ジョブの管理、そして結果の取得を効率的に行うことができます。
 
-[![Lint](https://github.com/magifd2/splunk-cli/actions/workflows/lint.yml/badge.svg)](https://github.com/magifd2/splunk-cli/actions/workflows/lint.yml)
-[![Test](https://github.com/magifd2/splunk-cli/actions/workflows/test.yml/badge.svg)](https://github.com/magifd2/splunk-cli/actions/workflows/test.yml)
-
 ## 主な機能
 
 - **自動化**: シェルスクリプトやCI/CDジョブからSplunkの検索をトリガーし、結果を後続の処理に渡すことができます。
