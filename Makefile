@@ -29,12 +29,20 @@ DIST_DIR=dist
 
 # --- Build Targets ---
 
-.PHONY: all build clean test lint vulncheck help
+.PHONY: all build clean test lint vulncheck package help
 
 all: build
 
 # Build binaries for all target platforms
 build: build-macos build-linux build-windows
+
+# Package binaries for release
+package: clean build
+	@echo "📦 Packaging binaries for release..."
+	@cd ./${DIST_DIR}/macos && zip ../${OUTPUT_NAME}_${VERSION}_macos_universal.zip ${OUTPUT_NAME} && cd ../..
+	@cd ./${DIST_DIR}/linux && zip ../${OUTPUT_NAME}_${VERSION}_linux_amd64.zip ${OUTPUT_NAME} && cd ../..
+	@cd ./${DIST_DIR}/windows && zip ../${OUTPUT_NAME}_${VERSION}_windows_amd64.zip ${OUTPUT_NAME}.exe && cd ../..
+	@echo "✅ Packaging complete. Archives and binaries are in ./${DIST_DIR}/"
 
 # Build for macOS (Universal Binary)
 build-macos:
