@@ -28,7 +28,7 @@ If you have Go installed, you can build the tool from the source code.
 ```bash
 # Clone the repository
 git clone https://github.com/magifd2/splunk-cli.git
-cd <Your-Repository-Name>
+cd splunk-cli
 
 # Build the binary
 make build
