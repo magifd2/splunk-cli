@@ -56,9 +56,17 @@ The most convenient way to use the tool is by creating a configuration file.
 
 Settings are evaluated in the following order of precedence (highest priority first):
 
-1.  **Command-line Flags** (e.g., `--host <URL>`)
-2.  **Environment Variables** (e.g., `SPLUNK_HOST`, `SPLUNK_APP`)
-3.  **Configuration File**
+1.  **Command-line Flags** (e.g., `--config <path>`)
+2.  **Command-line Flags (specific)** (e.g., `--host <URL>`)
+3.  **Environment Variables** (e.g., `SPLUNK_HOST`, `SPLUNK_APP`)
+4.  **Configuration File**
+
+### Global Flags
+
+These flags can be used with any command:
+
+- `--config <path>`: Path to a custom configuration file. Overrides the default `~/.config/splunk-cli/config.json`.
+- `--version`: Print version information and exit.
 
 ### Commands
 

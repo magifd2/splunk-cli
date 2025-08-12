@@ -70,14 +70,19 @@ func (l *logger) Debugf(format string, a ...any) {
 }
 
 // loadConfigFromFile loads configuration from the user's config directory.
-func loadConfigFromFile() (config, string, error) {
+// It now accepts an optional customConfigPath. If provided, it uses that path.
+func loadConfigFromFile(customConfigPath string) (config, string, error) {
 	var cfg config
+	configFile := customConfigPath // Use custom path if provided
+
+	if configFile == "" { // If no custom path, use default
 	home, err := os.UserHomeDir()
-	if err != nil {
-		return cfg, "", fmt.Errorf("could not get user home directory: %w", err)
+		if err != nil {
+			return cfg, "", fmt.Errorf("could not get user home directory: %w", err)
+		}
+		configFile = filepath.Join(home, ".config", "splunk-cli", "config.json")
 	}
 
-	configFile := filepath.Join(home, ".config", "splunk-cli", "config.json")
 	if _, err := os.Stat(configFile); os.IsNotExist(err) {
 		return cfg, configFile, nil
 	}
@@ -280,7 +285,7 @@ func getJobStatus(sid string, state *clientState) (bool, string, []splunkMessage
 		return false, "", nil, err
 	}
 	
-	q := req.URL.Query()
+q := req.URL.Query()
 	q.Add("output_mode", "json")
 	req.URL.RawQuery = q.Encode()
 
@@ -747,8 +752,11 @@ func resultsCmd(args []string, baseCfg config) error {
 }
 
 func printUsage() {
-	fmt.Fprintln(os.Stderr, "Usage: splunk-cli <command> [options]")
+	fmt.Fprintln(os.Stderr, "Usage: splunk-cli [global options] <command> [options]")
 	fmt.Fprintln(os.Stderr, "\nA flexible CLI tool to interact with the Splunk REST API.")
+	fmt.Fprintln(os.Stderr, "\nGlobal Options:")
+	fmt.Fprintln(os.Stderr, "  --config <path>  Path to a custom configuration file")
+	fmt.Fprintln(os.Stderr, "  --version        Print version information and exit")
 	fmt.Fprintln(os.Stderr, "\nCommands:")
 	fmt.Fprintln(os.Stderr, "  run      Run a search job synchronously and wait for results.")
 	fmt.Fprintln(os.Stderr, "  start    Start a search job and print the SID immediately.")
@@ -766,6 +774,11 @@ func printHelp(args []string) {
 	cmd := args[0]
 	var fs *flag.FlagSet
 	dummyCfg := config{}
+
+	// Create a global FlagSet to include --config and --version for help output
+	globalFs := flag.NewFlagSet("global", flag.ContinueOnError)
+	globalFs.String("config", "", "Path to a custom configuration file")
+	globalFs.Bool("version", false, "Print version information and exit") // Also include version here for consistency
 
 	switch cmd {
 	case "run":
@@ -798,6 +811,8 @@ func printHelp(args []string) {
 	addCommonFlags(fs, &dummyCfg)
 	fmt.Fprintf(os.Stderr, "Usage: splunk-cli %s [options]\n\nOptions for %s:\n", cmd, cmd)
 	fs.PrintDefaults()
+	fmt.Fprintln(os.Stderr, "\nGlobal Options:") // Print global options after command-specific ones
+	globalFs.PrintDefaults()
 }
 
 
@@ -811,8 +826,12 @@ var (
 
 func main() {
 	var showVersion bool
+	var configPath string // New variable for custom config path
+
 	flag.BoolVar(&showVersion, "version", false, "Print version information and exit")
+	flag.StringVar(&configPath, "config", "", "Path to a custom configuration file") // New flag
 	flag.Parse()
+
 
 	if showVersion {
 		fmt.Printf("splunk-cli version %s\ncommit %s\nbuilt at %s\n", version, commit, date)
@@ -826,7 +845,7 @@ func main() {
 	}
 
 	log := &logger{}
-	baseCfg, cfgPath, err := loadConfigFromFile()
+	baseCfg, cfgPath, err := loadConfigFromFile(configPath) // Pass configPath here
 	if err != nil {
 		log.Printf("Warning: could not load config file at %s: %v\n", cfgPath, err)
 	}
