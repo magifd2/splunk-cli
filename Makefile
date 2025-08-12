@@ -105,6 +105,7 @@ help:
 	@echo "  build-macos  Build universal binary for macOS."
 	@echo "  build-linux  Build binary for Linux (amd64)."
 	@echo "  build-windows Build binary for Windows (amd64)."
+	@echo "  package      Package binaries for release."
 	@echo "  test         Run tests."
 	@echo "  lint         Run the linter."
 	@echo "  vulncheck    Run vulnerability scanner."
