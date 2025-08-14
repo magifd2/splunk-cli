@@ -5,6 +5,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.0] - 2025-08-14
+
+### Changed
+
+- **Major Refactoring**: The entire codebase has been refactored for better modularity, testability, and maintainability.
+  - Core Splunk API interaction logic has been extracted into a new `splunk` package.
+  - Command-line interface (CLI) logic has been separated into a new `cmd` package, with each command in its own file.
+  - The main application entrypoint (`splunk-cli.go`) is now significantly simplified.
+
 ## [1.1.0] - 2025-08-12
 
 ### Added
