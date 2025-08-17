@@ -48,8 +48,8 @@ package: clean build
 build-macos:
 	@echo "📦 Building for macOS (Universal)..."
 	@mkdir -p ./${DIST_DIR}/macos
-	@GOOS=darwin GOARCH=amd64 $(GOBUILD) -ldflags="-X 'main.version=${VERSION}' -X 'main.commit=${GIT_COMMIT}' -X 'main.date=${BUILD_DATE}'" -o ./${DIST_DIR}/macos/${OUTPUT_NAME}_amd64 ./${SOURCE_FILE}
-	@GOOS=darwin GOARCH=arm64 $(GOBUILD) -ldflags="-X 'main.version=${VERSION}' -X 'main.commit=${GIT_COMMIT}' -X 'main.date=${BUILD_DATE}'" -o ./${DIST_DIR}/macos/${OUTPUT_NAME}_arm64 ./${SOURCE_FILE}
+	@GOOS=darwin GOARCH=amd64 $(GOBUILD) -ldflags="-X 'main.Version=${VERSION}' -X 'main.Commit=${GIT_COMMIT}' -X 'main.Date=${BUILD_DATE}'" -o ./${DIST_DIR}/macos/${OUTPUT_NAME}_amd64 ./${SOURCE_FILE}
+	@GOOS=darwin GOARCH=arm64 $(GOBUILD) -ldflags="-X 'main.Version=${VERSION}' -X 'main.Commit=${GIT_COMMIT}' -X 'main.Date=${BUILD_DATE}'" -o ./${DIST_DIR}/macos/${OUTPUT_NAME}_arm64 ./${SOURCE_FILE}
 	@lipo -create -output ./${DIST_DIR}/macos/${OUTPUT_NAME} ./${DIST_DIR}/macos/${OUTPUT_NAME}_amd64 ./${DIST_DIR}/macos/${OUTPUT_NAME}_arm64
 	@rm ./${DIST_DIR}/macos/${OUTPUT_NAME}_amd64 ./${DIST_DIR}/macos/${OUTPUT_NAME}_arm64
 	@echo "🍏 macOS build complete: ./${DIST_DIR}/macos/${OUTPUT_NAME}"
@@ -58,14 +58,14 @@ build-macos:
 build-linux:
 	@echo "📦 Building for Linux (amd64)..."
 	@mkdir -p ./${DIST_DIR}/linux
-	@GOOS=linux GOARCH=amd64 $(GOBUILD) -ldflags="-X 'main.version=${VERSION}' -X 'main.commit=${GIT_COMMIT}' -X 'main.date=${BUILD_DATE}'" -o ./${DIST_DIR}/linux/${OUTPUT_NAME} ./${SOURCE_FILE}
+	@GOOS=linux GOARCH=amd64 $(GOBUILD) -ldflags="-X 'main.Version=${VERSION}' -X 'main.Commit=${GIT_COMMIT}' -X 'main.Date=${BUILD_DATE}'" -o ./${DIST_DIR}/linux/${OUTPUT_NAME} ./${SOURCE_FILE}
 	@echo "🐧 Linux build complete: ./${DIST_DIR}/linux/${OUTPUT_NAME}"
 
 # Build for Windows (amd64)
 build-windows:
 	@echo "📦 Building for Windows (amd64)..."
 	@mkdir -p ./${DIST_DIR}/windows
-	@GOOS=windows GOARCH=amd64 $(GOBUILD) -ldflags="-X 'main.version=${VERSION}' -X 'main.commit=${GIT_COMMIT}' -X 'main.date=${BUILD_DATE}'" -o ./${DIST_DIR}/windows/${OUTPUT_NAME}.exe ./${SOURCE_FILE}
+	@GOOS=windows GOARCH=amd64 $(GOBUILD) -ldflags="-X 'main.Version=${VERSION}' -X 'main.Commit=${GIT_COMMIT}' -X 'main.Date=${BUILD_DATE}'" -o ./${DIST_DIR}/windows/${OUTPUT_NAME}.exe ./${SOURCE_FILE}
 	@echo "🪟  Windows build complete: ./${DIST_DIR}/windows/${OUTPUT_NAME}.exe"
 
 # --- Quality & Verification ---

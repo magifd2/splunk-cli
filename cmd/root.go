@@ -2,7 +2,6 @@ package cmd
 
 import (
 	"errors"
-	"flag"
 	"fmt"
 	"os"
 	"strings"
@@ -11,25 +10,21 @@ import (
 	"splunk_cli/splunk"
 )
 
-// These variables are set by the linker.
-var (
-	Version = "dev"
-	Commit  = "none"
-	Date    = "unknown"
-)
-
 func Execute() {
-	var showVersion bool
 	var configPath string
 
-	flag.BoolVar(&showVersion, "version", false, "Print version information and exit")
-	flag.StringVar(&configPath, "config", "", "Path to a custom configuration file")
-	flag.Parse()
-
-	if showVersion {
-		fmt.Printf("splunk-cli version %s\ncommit %s\nbuilt at %s", Version, Commit, Date)
-		os.Exit(0)
+	// NOTE: We are not using flag.Parse() here at the top level anymore.
+	// Each command will be responsible for parsing its own flags.
+	// We manually check for the config flag.
+	for i, arg := range os.Args {
+		if (arg == "--config" || arg == "-config") && i+1 < len(os.Args) {
+			configPath = os.Args[i+1]
+			// Remove the flag and its value from os.Args so subcommands don't see it.
+			os.Args = append(os.Args[:i], os.Args[i+2:]...)
+			break
+		}
 	}
+
 
 	if len(os.Args) < 2 {
 		printUsage()
