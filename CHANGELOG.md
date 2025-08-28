@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.4.0] - 2025-08-28
+
+### Changed
+
+- Implemented pagination for result fetching to correctly handle large result sets that exceed the API's single-request limit. This ensures that `--limit 0` fetches all results and that `--limit` values greater than 50,000 are respected.
+
 ## [1.3.0] - 2025-08-28
 
 ### Added
