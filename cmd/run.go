@@ -50,7 +50,7 @@ func runCmd(args []string, baseCfg splunk.Config) error {
 	if err != nil {
 		return err
 	}
-	client.Log.Printf("Job started with SID: %s", sid)
+	client.Log.Printf("Job started with SID: %s\n", sid)
 
 	ctx, cancel := context.WithTimeout(context.Background(), *timeout)
 	defer cancel()
@@ -95,7 +95,7 @@ func runCmd(args []string, baseCfg splunk.Config) error {
 	}
 
 	client.Log.Println("Fetching results...")
-	results, err := client.Results(sid)
+	results, err := client.Results(sid, baseCfg.Limit)
 	if err != nil {
 		return err
 	}

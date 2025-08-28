@@ -45,7 +45,7 @@ func resultsCmd(args []string, baseCfg splunk.Config) error {
 	}
 
 	client.Log.Println("Fetching results...")
-	results, err := client.Results(*sid)
+	results, err := client.Results(*sid, baseCfg.Limit)
 	if err != nil {
 		return err
 	}

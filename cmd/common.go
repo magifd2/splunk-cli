@@ -26,6 +26,7 @@ func addCommonFlags(fs *flag.FlagSet, cfg *splunk.Config) {
 	fs.BoolVar(&cfg.Insecure, "insecure", cfg.Insecure, "Skip TLS certificate verification")
 	fs.DurationVar(&cfg.HTTPTimeout, "http-timeout", cfg.HTTPTimeout, "Timeout for individual HTTP requests (e.g., '5s', '1m')")
 	fs.BoolVar(&cfg.Debug, "debug", false, "Enable verbose debug logging")
+	fs.IntVar(&cfg.Limit, "limit", cfg.Limit, "Maximum number of results to return (0 for all)")
 }
 
 // getChoiceFromTTY reads a single line of input from the terminal, bypassing stdin.

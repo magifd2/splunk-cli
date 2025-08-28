@@ -19,6 +19,7 @@ type Config struct {
 	Owner       string        `json:"owner"`
 	Insecure    bool          `json:"insecure"`
 	HTTPTimeout time.Duration `json:"httpTimeout"`
+	Limit       int           `json:"limit"`
 	Debug       bool          `json:"-"` // Exclude from JSON marshalling
 }
 
@@ -55,6 +56,7 @@ func LoadConfigFromFile(customConfigPath string) (Config, string, error) {
 		Owner       string `json:"owner"`
 		Insecure    bool   `json:"insecure"`
 		HTTPTimeout string `json:"httpTimeout"`
+		Limit       int    `json:"limit"`
 	}
 	var helper configHelper
 	if err := json.NewDecoder(file).Decode(&helper); err != nil {
@@ -68,6 +70,7 @@ func LoadConfigFromFile(customConfigPath string) (Config, string, error) {
 	cfg.App = strings.TrimSpace(helper.App)
 	cfg.Owner = strings.TrimSpace(helper.Owner)
 	cfg.Insecure = helper.Insecure
+	cfg.Limit = helper.Limit
 	if helper.HTTPTimeout != "" {
 		parsedDuration, err := time.ParseDuration(helper.HTTPTimeout)
 		if err != nil {

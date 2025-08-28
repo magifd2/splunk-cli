@@ -292,13 +292,14 @@ func (c *Client) WaitForJob(ctx context.Context, sid string) error {
 }
 
 // Results fetches the results of a completed search job.
-func (c *Client) Results(sid string) (string, error) {
+func (c *Client) Results(sid string, limit int) (string, error) {
 	endpoint, err := c.createAPIURL("search", "jobs", sid, "results")
 	if err != nil {
 		return "", err
 	}
 	c.Log.Debugf(`Request: GET %s
-`, endpoint)
+`,
+			 endpoint)
 
 	req, err := http.NewRequest("GET", endpoint, nil)
 	if err != nil {
@@ -306,6 +307,7 @@ func (c *Client) Results(sid string) (string, error) {
 	}
 	q := req.URL.Query()
 	q.Add("output_mode", "json")
+	q.Add("count", fmt.Sprintf("%d", limit))
 	req.URL.RawQuery = q.Encode()
 
 	resp, err := c.doRequest(req)
