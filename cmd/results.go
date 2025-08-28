@@ -33,7 +33,7 @@ func resultsCmd(args []string, baseCfg splunk.Config) error {
 		printDebugConfig(&baseCfg, client.Log)
 	}
 
-	done, jobState, _, err := client.JobStatus(*sid)
+	done, jobState, _, _, err := client.JobStatus(*sid)
 	if err != nil {
 		return err
 	}

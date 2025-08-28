@@ -1,7 +1,6 @@
 package splunk
 
 import (
-	"bytes"
 	"context"
 	"crypto/tls"
 	"encoding/json"
@@ -202,17 +201,17 @@ type SplunkMessage struct {
 }
 
 // JobStatus retrieves the current status of a search job.
-func (c *Client) JobStatus(sid string) (bool, string, []SplunkMessage, error) {
+func (c *Client) JobStatus(sid string) (bool, string, []SplunkMessage, int, error) {
 	endpoint, err := c.createAPIURL("search", "jobs", sid)
 	if err != nil {
-		return false, "", nil, err
+		return false, "", nil, 0, err
 	}
 	c.Log.Debugf(`Request: GET %s
 `, endpoint)
 
 	req, err := http.NewRequest("GET", endpoint, nil)
 	if err != nil {
-		return false, "", nil, err
+		return false, "", nil, 0, err
 	}
 
 	q := req.URL.Query()
@@ -221,12 +220,12 @@ func (c *Client) JobStatus(sid string) (bool, string, []SplunkMessage, error) {
 
 	resp, err := c.doRequest(req)
 	if err != nil {
-		return false, "", nil, err
+		return false, "", nil, 0, err
 	}
 	defer resp.Body.Close()
 
 	if err := c.handleFailedResponse(resp, http.StatusOK); err != nil {
-		return false, "", nil, err
+		return false, "", nil, 0, err
 	}
 
 	var status struct {
@@ -235,24 +234,26 @@ func (c *Client) JobStatus(sid string) (bool, string, []SplunkMessage, error) {
 				IsDone        bool            `json:"isDone"`
 				DispatchState string          `json:"dispatchState"`
 				Messages      []SplunkMessage `json:"messages"`
+				ResultCount   int             `json:"resultCount"`
 			} `json:"content"`
 		} `json:"entry"`
 	}
 	bodyBytes, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return false, "", nil, fmt.Errorf(`failed to read job status response body: %w`, err)
+		return false, "", nil, 0, fmt.Errorf(`failed to read job status response body: %w`, err)
 	}
 
 	if err := json.Unmarshal(bodyBytes, &status); err != nil {
-		return false, "", nil, fmt.Errorf(`failed to decode job status JSON: %w. Received: %s`, err, string(bodyBytes))
+		return false, "", nil, 0, fmt.Errorf(`failed to decode job status JSON: %w. Received: %s`, err, string(bodyBytes))
 	}
 
 	if len(status.Entry) == 0 {
-		return false, "", nil, errors.New("job status not found in response")
+		return false, "", nil, 0, errors.New("job status not found in response")
 	}
 	content := status.Entry[0].Content
-	return content.IsDone, content.DispatchState, content.Messages, nil
+	return content.IsDone, content.DispatchState, content.Messages, content.ResultCount, nil
 }
+
 
 // WaitForJob waits for a job to finish, with a timeout.
 func (c *Client) WaitForJob(ctx context.Context, sid string) error {
@@ -265,7 +266,7 @@ func (c *Client) WaitForJob(ctx context.Context, sid string) error {
 		case <-ctx.Done():
 			return ctx.Err()
 		case <-ticker.C:
-			done, jobState, messages, err := c.JobStatus(sid)
+			done, jobState, messages, _, err := c.JobStatus(sid)
 			if err != nil {
 				return err
 			}
@@ -291,46 +292,83 @@ func (c *Client) WaitForJob(ctx context.Context, sid string) error {
 	}
 }
 
-// Results fetches the results of a completed search job.
+// Results fetches the results of a completed search job, handling pagination.
 func (c *Client) Results(sid string, limit int) (string, error) {
-	endpoint, err := c.createAPIURL("search", "jobs", sid, "results")
+	// 1. Get the total number of results for the job
+	_, _, _, totalResults, err := c.JobStatus(sid)
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("could not get job status before fetching results: %w", err)
 	}
-	c.Log.Debugf(`Request: GET %s
-`,
-			 endpoint)
 
-	req, err := http.NewRequest("GET", endpoint, nil)
+	// 2. Determine the number of results to fetch
+	fetchCount := limit
+	if limit == 0 || (limit > 0 && limit > totalResults) {
+		fetchCount = totalResults
+	}
+
+	// 3. Fetch results, with pagination if necessary
+	const maxCount = 50000 // Max results per request
+	var allResults []json.RawMessage
+
+	for offset := 0; offset < fetchCount; offset += maxCount {
+		// Determine count for this specific request
+		count := maxCount
+		if offset+count > fetchCount {
+			count = fetchCount - offset
+		}
+
+		// Prepare request
+		endpoint, err := c.createAPIURL("search", "jobs", sid, "results")
+		if err != nil {
+			return "", err
+		}
+		c.Log.Debugf(`Request: GET %s (offset: %d, count: %d)
+`, endpoint, offset, count)
+
+		req, err := http.NewRequest("GET", endpoint, nil)
+		if err != nil {
+			return "", err
+		}
+		q := req.URL.Query()
+		q.Add("output_mode", "json")
+		q.Add("offset", fmt.Sprintf("%d", offset))
+		q.Add("count", fmt.Sprintf("%d", count))
+		req.URL.RawQuery = q.Encode()
+
+		// Execute request
+		resp, err := c.doRequest(req)
+		if err != nil {
+			return "", err
+		}
+		defer resp.Body.Close()
+
+		if err := c.handleFailedResponse(resp, http.StatusOK); err != nil {
+			return "", err
+		}
+
+		// Decode and append results
+		var page struct {
+			Results []json.RawMessage `json:"results"`
+		}
+		if err := json.NewDecoder(resp.Body).Decode(&page); err != nil {
+			return "", fmt.Errorf("failed to decode results page: %w", err)
+		}
+		allResults = append(allResults, page.Results...)
+	}
+
+	// 4. Combine and format the final JSON output
+	finalJSON := map[string][]json.RawMessage{
+		"results": allResults,
+	}
+
+	prettyJSON, err := json.MarshalIndent(finalJSON, "", "  ")
 	if err != nil {
-		return "", err
-	}
-	q := req.URL.Query()
-	q.Add("output_mode", "json")
-	q.Add("count", fmt.Sprintf("%d", limit))
-	req.URL.RawQuery = q.Encode()
-
-	resp, err := c.doRequest(req)
-	if err != nil {
-		return "", err
-	}
-	defer resp.Body.Close()
-
-	if err := c.handleFailedResponse(resp, http.StatusOK); err != nil {
-		return "", err
+		return "", fmt.Errorf("failed to marshal final results: %w", err)
 	}
 
-	body, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return "", err
-	}
-
-	var prettyJSON bytes.Buffer
-	if err := json.Indent(&prettyJSON, body, "", "  "); err != nil {
-		return string(body), nil
-	}
-	return prettyJSON.String(), nil
+	return string(prettyJSON), nil
 }
+
 
 // CancelSearch sends a request to cancel a running job.
 func (c *Client) CancelSearch(sid string) error {
