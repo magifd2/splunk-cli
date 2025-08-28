@@ -5,6 +5,21 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.3.0] - 2025-08-28
+
+### Added
+
+- Added a `--limit` flag to the `run` and `results` commands to control the maximum number of results returned.
+- Added a `limit` field to the `config.json` file to allow setting a default result limit.
+
+### Changed
+
+- The default behavior for result fetching is now to return all results (`limit=0`) unless specified otherwise by the `--limit` flag or in the config file.
+
+### Fixed
+
+- Fixed a display issue where the "Waiting for job to complete..." message was not printed on a new line.
+
 ## [1.2.1] - 2025-08-18
 
 ### Fixed

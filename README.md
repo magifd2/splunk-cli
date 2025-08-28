@@ -48,7 +48,8 @@ The most convenient way to use the tool is by creating a configuration file.
   "token": "your-splunk-token-here",
   "app": "search",
   "insecure": true,
-  "httpTimeout": "60s"
+  "httpTimeout": "60s",
+  "limit": 100
 }
 ```
 
@@ -78,8 +79,8 @@ Starts a search, waits for it to complete, and displays the results.
 
 **Examples**:
 ```bash
-# Search data from the last hour
-splunk-cli run --spl "index=_internal" --earliest "-1h"
+# Search data from the last hour, limiting to 10 results
+splunk-cli run --spl "index=_internal" --earliest "-1h" --limit 10
 
 # Read SPL from a file and execute
 cat my_query.spl | splunk-cli run -f -
@@ -90,6 +91,7 @@ cat my_query.spl | splunk-cli run -f -
 - `--earliest <time>`: The earliest time for the search (e.g., -1h, @d, 1672531200).
 - `--latest <time>`: The latest time for the search (e.g., now, @d, 1672617600).
 - `--timeout <duration>`: Total timeout for the job (e.g., 10m, 1h30m).
+- `--limit <int>`: Maximum number of results to return (0 for all).
 - `--silent`: Suppress progress messages.
 
 > **💡 Ctrl+C Behavior**: When you press `Ctrl+C` during a `run` command, you can choose to either cancel the job or let it continue running in the background.
@@ -119,8 +121,12 @@ Fetches the results of a completed job. This is useful in combination with tools
 
 **Example**:
 ```bash
-splunk-cli results --sid "$JOB_ID" --silent | jq .
+# Fetch up to 50 results for a given job
+splunk-cli results --sid "$JOB_ID" --limit 50 --silent | jq .
 ```
+
+- `--sid <string>`: The Search ID (SID) of the job.
+- `--limit <int>`: Maximum number of results to return (0 for all).
 
 ### Common Flags
 
@@ -132,6 +138,7 @@ These flags are available for most commands:
 - `--password <string>`: The password (will be prompted for if not provided).
 - `--app <string>`: The app context for the search.
 - `--owner <string>`: The owner of knowledge objects within the app (defaults to `nobody`).
+- `--limit <int>`: Maximum number of results to return (0 for all). The default is 0 (all results).
 - `--insecure`: Skip TLS certificate verification.
 - `--http-timeout <duration>`: Timeout for individual API requests (e.g., 30s, 1m).
 - `--debug`: Enable detailed debug logging.
@@ -143,8 +150,7 @@ This project uses a `Makefile` for common development tasks.
 
 - `make build`: Build binaries for all target platforms (macOS, Linux, Windows).
 - `make test`: Run tests.
-- `make lint`: Run the linter (`golangci-lint`).
-- `make vulncheck`: Scan for known vulnerabilities (`govulncheck`).
+- `make lint`: Run the linter (`golangci-lint`).n- `make vulncheck`: Scan for known vulnerabilities (`govulncheck`).
 - `make clean`: Clean up build artifacts.
 
 ## License
